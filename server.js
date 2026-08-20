@@ -6,7 +6,11 @@ const app = require('./app');
 
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  res.redirect('/login.html');
+});
 
 app.listen(PORT, () => {
   console.log(`CyberMonks Panel running at http://localhost:${PORT}`);

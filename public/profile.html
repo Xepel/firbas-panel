@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberMonks — Profile Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/cybermonks.css">
+  <link rel="icon" href="/assets/logo.png" type="image/png">
+</head>
+<body class="cm-auth">
+  <div class="cm-bg-pattern"></div>
+  <nav class="cm-nav">
+    <div class="cm-nav-brand">
+      <img src="/assets/logo.png" alt="CyberMonks">
+      <span>CYBERMONKS</span>
+    </div>
+    <div class="cm-nav-actions">
+      <span id="navUser"></span>
+      <span class="cm-badge cm-badge-user" id="navRole"></span>
+      <a href="#" id="panelLink" class="cm-btn cm-btn-ghost">Panel</a>
+      <a href="#" id="adminLink" class="cm-btn cm-btn-ghost">Admin</a>
+      <button id="logoutBtn" class="cm-btn cm-btn-ghost">Logout</button>
+    </div>
+  </nav>
+  <div class="cm-page">
+    <div class="cm-section">
+      <h2>Account Info</h2>
+      <div class="cm-form-row">
+        <div>
+          <p class="cm-sub-info">Username</p>
+          <p style="font-size:1.1rem;font-weight:600" id="profileUsername"></p>
+        </div>
+        <div>
+          <p class="cm-sub-info">Role</p>
+          <p style="font-size:1.1rem;font-weight:600" id="profileRole"></p>
+        </div>
+        <div>
+          <p class="cm-sub-info">Subscription Expires</p>
+          <p style="font-size:1.1rem;font-weight:600" id="profileSub"></p>
+        </div>
+        <div>
+          <p class="cm-sub-info">Status</p>
+          <span id="profileSubStatus"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cm-section">
+      <h2>Change Password</h2>
+      <div id="passwordMsg" class="cm-error"></div>
+      <form id="passwordForm">
+        <div class="cm-field">
+          <label for="currentPassword">Current Password</label>
+          <input type="password" id="currentPassword" required autocomplete="current-password">
+        </div>
+        <div class="cm-form-row">
+          <div class="cm-field">
+            <label for="newPassword">New Password</label>
+            <input type="password" id="newPassword" required minlength="6" autocomplete="new-password">
+          </div>
+          <div class="cm-field">
+            <label for="confirmPassword">Confirm New Password</label>
+            <input type="password" id="confirmPassword" required minlength="6" autocomplete="new-password">
+          </div>
+        </div>
+        <button type="submit" class="cm-btn cm-btn-primary" style="margin-top:16px;max-width:280px">Update Password</button>
+      </form>
+    </div>
+  </div>
+  <script src="/js/auth.js"></script>
+  <script src="/js/profile.js"></script>
+</body>
+</html>

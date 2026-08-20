@@ -1,5 +1,9 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/login.html" }
+    { "handle": "filesystem" },
+    { "source": "/api/(.*)", "destination": "/api" }
+  ],
+  "redirects": [
+    { "source": "/", "destination": "/login.html", "permanent": false }
   ]
 }
