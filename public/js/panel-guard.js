@@ -28,7 +28,7 @@
 
       const nav = document.createElement('div');
       nav.id = 'cm-topnav';
-      nav.style.cssText = 'display:flex;align-items:center;gap:10px;margin-left:auto';
+      nav.style.cssText = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap';
       nav.innerHTML = `
         <span style="font-size:11px;color:#666">${user.username}</span>
         <a href="/profile.html" style="font-size:11px;color:#00ffff;text-decoration:none;padding:4px 10px;border:1px solid rgba(0,255,255,0.2);border-radius:8px">Profile</a>

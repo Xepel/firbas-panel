@@ -341,3 +341,19 @@ body.cm-auth {
   color: #888;
   margin-top: 8px;
 }
+
+@media (max-width: 720px) {
+  .cm-nav {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .cm-nav-actions {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .cm-page { padding: 14px; }
+  .cm-section { padding: 16px; }
+  .cm-table { font-size: 0.75rem; }
+}

