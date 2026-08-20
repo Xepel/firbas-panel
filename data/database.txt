@@ -1,0 +1,19 @@
+{
+  "users": [
+    {
+      "id": "owner-001",
+      "username": "owner",
+      "passwordHash": "$2a$10$8tqIwfk3jhM8lH5aBGJjou9QKdD8MCXUYnrigHIjkLzY5Iiq2lc.2",
+      "role": "owner",
+      "subscriptionExpires": null,
+      "createdAt": "2026-08-20T00:00:00.000Z"
+    }
+  ],
+  "sessions": [
+    {
+      "token": "66437db7844cdba1be4eff8ecd5bbea2695a20790cbf9ce0873f8a4dce63be25",
+      "userId": "owner-001",
+      "expiresAt": "2026-08-27T07:33:44.334Z"
+    }
+  ]
+}
