@@ -1,9 +1,7 @@
 {
+  "framework": null,
+  "outputDirectory": "public",
   "rewrites": [
-    { "handle": "filesystem" },
-    { "source": "/api/(.*)", "destination": "/api" }
-  ],
-  "redirects": [
-    { "source": "/", "destination": "/login.html", "permanent": false }
+    { "source": "/", "destination": "/login.html" }
   ]
 }
