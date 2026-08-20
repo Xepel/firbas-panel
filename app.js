@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
@@ -8,11 +10,25 @@ const SESSION_DAYS = 7;
 
 let supabase = null;
 
+function cleanEnv(value) {
+  if (value == null) return '';
+  return String(value).trim().replace(/^["']|["']$/g, '');
+}
+
+function getSupabaseConfig() {
+  const url = cleanEnv(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
+  const key = cleanEnv(
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SERVICE_ROLE ||
+    process.env.SERVICE_ROLE_KEY
+  );
+  return { url, key };
+}
+
 function getSupabase() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const { url, key } = getSupabaseConfig();
   if (!url || !key || key.includes('PASTE_')) {
-    throw new Error('Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel Environment Variables.');
+    throw new Error('Supabase not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Vercel → Settings → Environment Variables for Production AND Preview, then Redeploy.');
   }
   if (!supabase) supabase = createClient(url, key);
   return supabase;
@@ -155,9 +171,14 @@ function calcSubscriptionExpiry(currentExpiry, days) {
 // ── Health (no DB required) ──
 
 app.get('/api/health', (req, res) => {
-  const configured = !!(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-    && !process.env.SUPABASE_SERVICE_ROLE_KEY.includes('PASTE_'));
-  res.json({ ok: true, supabase: configured });
+  const { url, key } = getSupabaseConfig();
+  res.json({
+    ok: true,
+    vercelEnv: process.env.VERCEL_ENV || 'local',
+    hasSupabaseUrl: Boolean(url),
+    hasServiceRoleKey: Boolean(key) && !key.includes('PASTE_'),
+    keyLooksLikeJwt: key.startsWith('eyJ')
+  });
 });
 
 // ── Auth ──

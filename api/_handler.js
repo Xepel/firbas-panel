@@ -1,3 +1,4 @@
+require('dotenv').config();
 const app = require('../app');
 
 function handler(req, res) {
