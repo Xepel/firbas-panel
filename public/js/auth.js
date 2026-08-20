@@ -21,7 +21,7 @@ function hideMsg(el) {
   if (!el) el?.classList?.remove('show');
 }
 
-async function requireAuth(redirect = '/login.html') {
+async function requireAuth(redirect = '/') {
   try {
     const { user } = await api('/api/me');
     return user;
@@ -60,5 +60,5 @@ function subBadge(active) {
 
 async function logout() {
   await api('/api/logout', { method: 'POST' }).catch(() => {});
-  window.location.href = '/login.html';
+  window.location.href = '/';
 }

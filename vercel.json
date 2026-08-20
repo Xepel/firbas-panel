@@ -1,7 +1,4 @@
 {
   "framework": null,
-  "outputDirectory": "public",
-  "rewrites": [
-    { "source": "/", "destination": "/login.html" }
-  ]
+  "outputDirectory": "public"
 }

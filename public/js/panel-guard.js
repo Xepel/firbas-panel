@@ -1,11 +1,11 @@
 (function () {
   const gate = document.getElementById('auth-gate');
 
-  requireAuth('/login.html').then(user => {
+  requireAuth('/').then(user => {
     if (!user) return;
     if (!user.subscriptionActive && user.role === 'user') {
       alert('Your subscription has expired. Contact the owner.');
-      window.location.href = '/login.html';
+      window.location.href = '/';
       return;
     }
     if (gate) gate.style.display = 'none';

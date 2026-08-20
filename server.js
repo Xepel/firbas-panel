@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  res.redirect('/login.html');
+  res.redirect('/');
 });
 
 app.listen(PORT, () => {
