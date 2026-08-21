@@ -268,69 +268,79 @@ app.post('/api/users', requireAuth(['owner', 'admin']), async (req, res) => {
   res.status(201).json({ user: sanitizeUser(rowToUser(data)) });
 });
 
-app.delete('/api/users/:id', requireAuth(['owner', 'admin']), async (req, res) => {
+async function deleteUserById(req, res, id) {
   const sb = getSupabase();
-  const { data: target } = await sb.from('cm_users').select('*').eq('id', req.params.id).maybeSingle();
+  const { data: target } = await sb.from('cm_users').select('*').eq('id', id).maybeSingle();
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (target.role === 'owner') return res.status(403).json({ error: 'Cannot delete owner' });
   if (req.user.role === 'admin' && target.role === 'admin') {
     return res.status(403).json({ error: 'Admins cannot delete other admins' });
   }
-  await sb.from('cm_sessions').delete().eq('user_id', req.params.id);
-  await sb.from('cm_users').delete().eq('id', req.params.id);
-  res.json({ ok: true });
-});
+  await sb.from('cm_sessions').delete().eq('user_id', id);
+  await sb.from('cm_users').delete().eq('id', id);
+  return res.json({ ok: true });
+}
 
-app.put('/api/users/:id/password', requireAuth(['owner', 'admin']), async (req, res) => {
-  const { password } = req.body || {};
+async function resetUserPassword(req, res, id, password) {
   if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
-
   const sb = getSupabase();
-  const { data: target } = await sb.from('cm_users').select('*').eq('id', req.params.id).maybeSingle();
+  const { data: target } = await sb.from('cm_users').select('*').eq('id', id).maybeSingle();
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (target.role === 'owner' && req.user.id !== target.id) {
     return res.status(403).json({ error: 'Cannot reset owner password' });
   }
-
-  const { error } = await sb.from('cm_users').update({ password_hash: await bcrypt.hash(password, 10) }).eq('id', req.params.id);
+  const { error } = await sb.from('cm_users').update({ password_hash: await bcrypt.hash(password, 10) }).eq('id', id);
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ ok: true });
-});
+  return res.json({ ok: true });
+}
 
-app.put('/api/users/:id/subscription', requireAuth(['owner']), async (req, res) => {
-  const addDays = Number(req.body?.days);
+async function extendUserSubscription(req, res, id, days) {
+  const addDays = Number(days);
   if (!addDays || addDays < 1) return res.status(400).json({ error: 'Days must be a positive number' });
-
   const sb = getSupabase();
-  const { data: user } = await sb.from('cm_users').select('*').eq('id', req.params.id).maybeSingle();
+  const { data: user } = await sb.from('cm_users').select('*').eq('id', id).maybeSingle();
   if (!user) return res.status(404).json({ error: 'User not found' });
-
   const { data, error } = await sb
     .from('cm_users')
     .update({ subscription_expires: calcSubscriptionExpiry(user.subscription_expires, addDays) })
-    .eq('id', req.params.id)
+    .eq('id', id)
     .select()
     .single();
-
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ user: sanitizeUser(rowToUser(data)) });
-});
+  return res.json({ user: sanitizeUser(rowToUser(data)) });
+}
 
-app.put('/api/profile/password', requireAuth(), async (req, res) => {
+async function changeOwnPassword(req, res) {
   const { currentPassword, newPassword } = req.body || {};
   if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new password required' });
   if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
-
   const sb = getSupabase();
   const { data: row } = await sb.from('cm_users').select('*').eq('id', req.user.id).maybeSingle();
   const user = rowToUser(row);
   if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
     return res.status(401).json({ error: 'Current password is incorrect' });
   }
-
   const { error } = await sb.from('cm_users').update({ password_hash: await bcrypt.hash(newPassword, 10) }).eq('id', req.user.id);
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ ok: true });
+  return res.json({ ok: true });
+}
+
+app.delete('/api/users/:id', requireAuth(['owner', 'admin']), (req, res) => deleteUserById(req, res, req.params.id));
+app.put('/api/users/:id/password', requireAuth(['owner', 'admin']), (req, res) => resetUserPassword(req, res, req.params.id, req.body?.password));
+app.put('/api/users/:id/subscription', requireAuth(['owner']), (req, res) => extendUserSubscription(req, res, req.params.id, req.body?.days));
+app.put('/api/profile/password', requireAuth(), changeOwnPassword);
+app.post('/api/profile-password', requireAuth(), changeOwnPassword);
+
+app.post('/api/user-action', requireAuth(['owner', 'admin']), async (req, res) => {
+  const { action, id, password, days } = req.body || {};
+  if (!action || !id) return res.status(400).json({ error: 'action and id required' });
+  if (action === 'delete') return deleteUserById(req, res, id);
+  if (action === 'password') return resetUserPassword(req, res, id, password);
+  if (action === 'subscription') {
+    if (req.user.role !== 'owner') return res.status(403).json({ error: 'Access denied' });
+    return extendUserSubscription(req, res, id, days);
+  }
+  return res.status(400).json({ error: 'Unknown action' });
 });
 
 module.exports = app;

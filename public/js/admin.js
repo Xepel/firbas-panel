@@ -100,9 +100,9 @@ function openSubModal(userId, username) {
 async function addSubscription(userId, days) {
   if (!days || days < 1) { alert('Enter a valid number of days'); return; }
   try {
-    await api(`/api/users/${userId}/subscription`, {
-      method: 'PUT',
-      body: JSON.stringify({ days })
+    await api('/api/user-action', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'subscription', id: userId, days })
     });
     loadUsers();
   } catch (err) {
@@ -114,9 +114,9 @@ async function resetPassword(userId) {
   const password = prompt('Enter new password (min 6 chars):');
   if (!password) return;
   try {
-    await api(`/api/users/${userId}/password`, {
-      method: 'PUT',
-      body: JSON.stringify({ password })
+    await api('/api/user-action', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'password', id: userId, password })
     });
     alert('Password reset successfully.');
   } catch (err) {
@@ -127,7 +127,10 @@ async function resetPassword(userId) {
 async function deleteUser(userId) {
   if (!confirm('Delete this user permanently?')) return;
   try {
-    await api(`/api/users/${userId}`, { method: 'DELETE' });
+    await api('/api/user-action', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'delete', id: userId })
+    });
     loadUsers();
   } catch (err) {
     alert(err.message);

@@ -52,8 +52,8 @@ async function changePassword(e) {
   }
 
   try {
-    await api('/api/profile/password', {
-      method: 'PUT',
+    await api('/api/profile-password', {
+      method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword })
     });
     msg.className = 'cm-success show';
