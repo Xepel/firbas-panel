@@ -34,7 +34,7 @@ function getSupabase() {
   return supabase;
 }
 
-app.use(express.json());
+app.use(express.json({ limit: '2mb' }));
 
 let dbReady = false;
 async function ensureDb() {
@@ -76,13 +76,14 @@ const DEFAULT_SETTINGS = {
 };
 
 function rowToSettings(row) {
-  if (!row) return { ...DEFAULT_SETTINGS };
+  if (!row) return { ...DEFAULT_SETTINGS, updatedAt: null };
   return {
     panelMode: row.panel_mode === 'free' ? 'free' : 'paid',
     panelName: row.panel_name || DEFAULT_SETTINGS.panelName,
     logoUrl: row.logo_url || DEFAULT_SETTINGS.logoUrl,
     telegramBotToken: row.telegram_bot_token || '',
-    telegramChatId: row.telegram_chat_id || ''
+    telegramChatId: row.telegram_chat_id || '',
+    updatedAt: row.updated_at || null
   };
 }
 
@@ -110,8 +111,14 @@ function publicSettings(settings) {
     panelMode: settings.panelMode,
     panelName: settings.panelName,
     logoUrl: settings.logoUrl,
+    updatedAt: settings.updatedAt || null,
     telegramConfigured: Boolean(settings.telegramBotToken && settings.telegramChatId)
   };
+}
+
+function noStore(res) {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
 }
 
 function rowToUser(row) {
@@ -393,6 +400,7 @@ app.put('/api/profile/password', requireAuth(), async (req, res) => {
 // ── Public / owner settings ──
 
 app.get('/api/settings', async (req, res) => {
+  noStore(res);
   try {
     await ensureDb();
     const settings = await getSettings();
@@ -423,7 +431,7 @@ app.put('/api/settings', requireAuth(['owner']), async (req, res) => {
     ? body.panelName.trim().slice(0, 60)
     : current.panelName;
   const logo_url = typeof body.logoUrl === 'string' && body.logoUrl.trim()
-    ? body.logoUrl.trim().slice(0, 2000)
+    ? body.logoUrl.trim().slice(0, 500000)
     : current.logoUrl;
   const telegram_bot_token = typeof body.telegramBotToken === 'string'
     ? body.telegramBotToken.trim()
