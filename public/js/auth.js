@@ -7,7 +7,12 @@ async function api(path, options = {}) {
     ...options
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Request failed');
+  if (!res.ok) {
+    const detail = data.error || (res.status === 404
+      ? 'API route not found (404). Redeploy the latest code on Vercel.'
+      : `Request failed (${res.status})`);
+    throw new Error(detail);
+  }
   return data;
 }
 

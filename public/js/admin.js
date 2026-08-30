@@ -9,8 +9,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   if (currentUser.role !== 'owner') {
     document.getElementById('subscriptionSection').style.display = 'none';
+    document.getElementById('ownerSettings').style.display = 'none';
     const roleField = document.getElementById('roleField');
     if (roleField) roleField.style.display = 'none';
+  } else {
+    loadOwnerSettings();
   }
 
   document.getElementById('logoutBtn').addEventListener('click', logout);
@@ -24,8 +27,59 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('addUserForm').addEventListener('submit', addUser);
+  const settingsForm = document.getElementById('settingsForm');
+  if (settingsForm) settingsForm.addEventListener('submit', saveOwnerSettings);
+
   loadUsers();
+  loadPanelSettings().then(applyBranding);
 });
+
+async function loadOwnerSettings() {
+  try {
+    const { settings } = await api('/api/settings/admin');
+    document.getElementById('panelMode').value = settings.panelMode || 'paid';
+    document.getElementById('panelName').value = settings.panelName || 'CyberMonks';
+    document.getElementById('logoUrl').value = settings.logoUrl || '/assets/logo.png';
+    document.getElementById('telegramBotToken').value = settings.telegramBotToken || '';
+    document.getElementById('telegramChatId').value = settings.telegramChatId || '';
+    updateModeHint();
+    document.getElementById('panelMode').onchange = updateModeHint;
+  } catch (err) {
+    const msg = document.getElementById('settingsMsg');
+    msg.className = 'cm-error show';
+    msg.textContent = err.message;
+  }
+}
+
+function updateModeHint() {
+  const mode = document.getElementById('panelMode').value;
+  document.getElementById('modeHint').textContent = mode === 'free'
+    ? 'Free mode: login page skips for visitors. Anyone can open panel and enter Firebase URL directly.'
+    : 'Paid mode: users must login with username/password and active subscription.';
+}
+
+async function saveOwnerSettings(e) {
+  e.preventDefault();
+  const msg = document.getElementById('settingsMsg');
+  msg.className = 'cm-error';
+  try {
+    const { settings } = await api('/api/settings', {
+      method: 'PUT',
+      body: JSON.stringify({
+        panelMode: document.getElementById('panelMode').value,
+        panelName: document.getElementById('panelName').value.trim(),
+        logoUrl: document.getElementById('logoUrl').value.trim(),
+        telegramBotToken: document.getElementById('telegramBotToken').value.trim(),
+        telegramChatId: document.getElementById('telegramChatId').value.trim()
+      })
+    });
+    msg.className = 'cm-success show';
+    msg.textContent = 'Settings saved. Free/Paid mode is live after refresh.';
+    applyBranding(settings);
+  } catch (err) {
+    showMsg(msg, err.message);
+  }
+}
 
 async function loadUsers() {
   const tbody = document.getElementById('usersBody');
@@ -43,6 +97,7 @@ async function loadUsers() {
         <td class="cm-actions-row">
           ${currentUser.role === 'owner' && u.role !== 'owner' ? `
             <button class="cm-btn cm-btn-ghost sub-btn" data-id="${u.id}" data-name="${escapeHtml(u.username)}">+ Days</button>
+            <button class="cm-btn cm-btn-ghost expire-btn" data-id="${u.id}" data-name="${escapeHtml(u.username)}">Expire</button>
           ` : ''}
           ${u.role !== 'owner' ? `
             <button class="cm-btn cm-btn-ghost reset-btn" data-id="${u.id}">Reset PW</button>
@@ -54,6 +109,9 @@ async function loadUsers() {
 
     tbody.querySelectorAll('.sub-btn').forEach(btn => {
       btn.addEventListener('click', () => openSubModal(btn.dataset.id, btn.dataset.name));
+    });
+    tbody.querySelectorAll('.expire-btn').forEach(btn => {
+      btn.addEventListener('click', () => expireSubscription(btn.dataset.id, btn.dataset.name));
     });
     tbody.querySelectorAll('.reset-btn').forEach(btn => {
       btn.addEventListener('click', () => resetPassword(btn.dataset.id));
@@ -100,9 +158,22 @@ function openSubModal(userId, username) {
 async function addSubscription(userId, days) {
   if (!days || days < 1) { alert('Enter a valid number of days'); return; }
   try {
-    await api('/api/user-action', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'subscription', id: userId, days })
+    await api(`/api/users/${userId}/subscription`, {
+      method: 'PUT',
+      body: JSON.stringify({ days })
+    });
+    loadUsers();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function expireSubscription(userId, username) {
+  if (!confirm(`Expire subscription for "${username}" now?`)) return;
+  try {
+    await api(`/api/users/${userId}/subscription`, {
+      method: 'PUT',
+      body: JSON.stringify({ expire: true })
     });
     loadUsers();
   } catch (err) {
@@ -114,9 +185,9 @@ async function resetPassword(userId) {
   const password = prompt('Enter new password (min 6 chars):');
   if (!password) return;
   try {
-    await api('/api/user-action', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'password', id: userId, password })
+    await api(`/api/users/${userId}/password`, {
+      method: 'PUT',
+      body: JSON.stringify({ password })
     });
     alert('Password reset successfully.');
   } catch (err) {
@@ -127,10 +198,7 @@ async function resetPassword(userId) {
 async function deleteUser(userId) {
   if (!confirm('Delete this user permanently?')) return;
   try {
-    await api('/api/user-action', {
-      method: 'POST',
-      body: JSON.stringify({ action: 'delete', id: userId })
-    });
+    await api(`/api/users/${userId}`, { method: 'DELETE' });
     loadUsers();
   } catch (err) {
     alert(err.message);

