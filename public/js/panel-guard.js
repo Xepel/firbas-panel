@@ -41,14 +41,19 @@
     const settings = window.__CM_SETTINGS__;
     if (!settings) return;
     const name = settings.panelName || 'CyberMonks';
-    const logo = settings.logoUrl || '/assets/logo.png';
+    const logo = typeof logoWithCacheBust === 'function'
+      ? logoWithCacheBust(settings.logoUrl || '/assets/logo.png', settings.updatedAt)
+      : (settings.logoUrl || '/assets/logo.png');
     const tryApply = setInterval(() => {
       const header = document.querySelector('header');
       if (!header) return;
       clearInterval(tryApply);
-      header.querySelectorAll('img[alt="CyberMonks"], img[src="/assets/logo.png"]').forEach(img => {
-        img.src = logo;
-        img.alt = name;
+      header.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (/logo\.png|cybermonks|cm-logo/i.test(src) || /cybermonks/i.test(img.alt || '')) {
+          img.src = logo;
+          img.alt = name;
+        }
       });
       // Replace CYBER + MONKS text spans if present
       const spans = header.querySelectorAll('span');

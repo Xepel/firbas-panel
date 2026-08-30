@@ -42,8 +42,13 @@ async function loadOwnerSettings() {
     document.getElementById('logoUrl').value = settings.logoUrl || '/assets/logo.png';
     document.getElementById('telegramBotToken').value = settings.telegramBotToken || '';
     document.getElementById('telegramChatId').value = settings.telegramChatId || '';
+    const preview = document.getElementById('logoPreview');
+    if (preview) preview.src = logoWithCacheBust(settings.logoUrl || '/assets/logo.png', settings.updatedAt);
     updateModeHint();
     document.getElementById('panelMode').onchange = updateModeHint;
+    document.getElementById('logoUrl').oninput = () => {
+      if (preview) preview.src = document.getElementById('logoUrl').value.trim() || '/assets/logo.png';
+    };
   } catch (err) {
     const msg = document.getElementById('settingsMsg');
     msg.className = 'cm-error show';
@@ -74,8 +79,10 @@ async function saveOwnerSettings(e) {
       })
     });
     msg.className = 'cm-success show';
-    msg.textContent = 'Settings saved. Free/Paid mode is live after refresh.';
+    const mode = (settings.panelMode || 'paid').toUpperCase();
+    msg.textContent = 'Saved. Live mode = ' + mode + '. Open / in a new tab to verify (hard refresh if needed).';
     applyBranding(settings);
+    updateModeHint();
   } catch (err) {
     showMsg(msg, err.message);
   }

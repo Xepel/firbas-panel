@@ -2,14 +2,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('loginForm');
   const errorEl = document.getElementById('loginError');
   const btn = document.getElementById('loginBtn');
+  const card = document.querySelector('.cm-card');
 
-  const settings = await loadPanelSettings();
+  let settings = { panelMode: 'paid', panelName: 'CyberMonks', logoUrl: '/assets/logo.png' };
+  try {
+    settings = await loadPanelSettings();
+  } catch {}
   applyBranding(settings);
 
-  if (settings.panelMode === 'free') {
-    window.location.href = '/panel.html';
+  // Free mode: skip login entirely
+  if (String(settings.panelMode || '').toLowerCase() === 'free') {
+    window.location.replace('/panel.html');
     return;
   }
+
+  if (card) card.style.visibility = 'visible';
 
   api('/api/me').then(({ user }) => {
     if (user.role === 'owner' || user.role === 'admin') {

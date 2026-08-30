@@ -47,7 +47,10 @@
         <div class="cm-field">
           <label for="logoUrl">Logo URL</label>
           <input type="text" id="logoUrl" placeholder="/assets/logo.png or https://...">
-          <p class="cm-sub-info">Use your hosted image URL, or keep /assets/logo.png</p>
+          <p class="cm-sub-info">Default: <code>/assets/logo.png</code> — replace that file in <code>public/assets/</code> then Redeploy. Or paste a full https image URL. After change, click Save Settings once so cache bust updates.</p>
+          <div style="margin-top:10px">
+            <img id="logoPreview" src="/assets/logo.png" alt="Logo preview" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:1px solid #333">
+          </div>
         </div>
         <div class="cm-form-row">
           <div class="cm-field">

@@ -9,14 +9,26 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/cybermonks.css">
   <link rel="icon" href="/assets/logo.png" type="image/png">
+  <script>
+    // Free mode: jump to panel before login UI paints (no cache)
+    (async function () {
+      try {
+        var r = await fetch('/api/settings?t=' + Date.now(), { cache: 'no-store', credentials: 'same-origin' });
+        var d = await r.json();
+        if (d && d.settings && String(d.settings.panelMode).toLowerCase() === 'free') {
+          location.replace('/panel.html');
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="cm-auth">
   <div class="cm-bg-pattern"></div>
   <div class="cm-wrap">
-    <div class="cm-card">
-      <img src="/assets/logo.png" alt="CyberMonks" class="cm-logo">
+    <div class="cm-card" style="visibility:hidden">
+      <img src="/assets/logo.png" alt="Panel" class="cm-logo" id="cmLoginLogo">
       <div class="cm-brand">
-        <h1>CYBERMONKS</h1>
+        <h1 id="cmLoginTitle">PANEL</h1>
         <p>Device Management Console</p>
       </div>
       <div id="loginError" class="cm-error"></div>
