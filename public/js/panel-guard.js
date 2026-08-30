@@ -4,13 +4,20 @@
   async function boot() {
     let settings = { panelMode: 'paid', panelName: 'CyberMonks', logoUrl: '/assets/logo.png' };
     try {
-      const data = await api('/api/settings');
+      const data = await api('/api/settings?t=' + Date.now());
       settings = data.settings || settings;
     } catch {}
 
     applyBranding(settings);
+    if (gate) {
+      const gateImg = gate.querySelector('img');
+      if (gateImg && typeof logoWithCacheBust === 'function') {
+        gateImg.src = logoWithCacheBust(settings.logoUrl || '/assets/logo.png', settings.updatedAt);
+        gateImg.alt = settings.panelName || 'Panel';
+      }
+    }
 
-    if (settings.panelMode === 'free') {
+    if (String(settings.panelMode || '').toLowerCase() === 'free') {
       if (gate) gate.style.display = 'none';
       loadApp({ username: 'guest', role: 'guest', freeMode: true });
       return;
@@ -29,7 +36,10 @@
 
   function loadApp(user) {
     const script = document.createElement('script');
-    script.src = '/js/app.bundle.js';
+    const stamp = (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.updatedAt)
+      ? new Date(window.__CM_SETTINGS__.updatedAt).getTime()
+      : Date.now();
+    script.src = '/js/app.bundle.js?v=' + stamp;
     script.onload = () => {
       injectNav(user);
       applyLiveBranding();

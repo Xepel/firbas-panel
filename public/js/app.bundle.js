@@ -13959,26 +13959,20 @@ Error: ${_t}`)
             children: [r.jsxs("div", {
                 className: "text-center mb-8",
                 children: [r.jsx("img", {
-                    src: "/assets/logo.png",
-                    alt: "CyberMonks",
+                    src: (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.logoUrl ? (function(u,t){if(/^data:/i.test(u))return u;var v=t?new Date(t).getTime():Date.now();return u+(u.indexOf("?")>=0?"&":"?")+"v="+v})(window.__CM_SETTINGS__.logoUrl,window.__CM_SETTINGS__.updatedAt) : "/assets/logo.png?v=" + Date.now()),
+                    alt: (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel",
                     className: "w-24 h-24 rounded-full mb-4 mx-auto object-cover",
                     style: {
                         boxShadow: "0 0 24px rgba(0,255,255,0.4), 0 0 40px rgba(255,140,0,0.25)"
                     }
                 }), r.jsxs("div", {
                     className: "flex flex-col items-center justify-center mt-10",
-                    children: [r.jsxs("h1", {
-                        className: "relative text-4xl font-bold italic tracking-tight opacity-0 animate-fade-in",
-                        children: [r.jsx("span", {
-                            className: "text-[#6acfff]",
-                            children: "CYBER"
-                        }), r.jsx("span", {
-                            className: "text-[#ff8c00]",
-                            children: "MONKS"
-                        })]
+                    children: [r.jsx("h1", {
+                        className: "relative text-3xl font-bold tracking-tight opacity-0 animate-fade-in text-[#00ffff]",
+                        children: ((window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel").toUpperCase()
                     }), r.jsx("p", {
                         className: "text-sm text-muted-foreground mt-2 opacity-0 animate-fade-in delay-300",
-                        children: "CyberMonks Device Console"
+                        children: ((window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel") + " Device Console"
                     }), r.jsx("style", {
                         jsx: !0,
                         children: `
@@ -14256,7 +14250,7 @@ Error: ${_t}`)
                 })]
             }), r.jsx("p", {
                 className: "text-center text-xs text-muted-foreground/40 mt-6",
-                children: "CyberMonks Admin Console · All connections are logged"
+                children: (((window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel") + " Admin Console · All connections are logged")
             })]
         }), v && r.jsx("div", {
             className: "fixed inset-0 z-50 flex items-center justify-center px-4",
@@ -15285,18 +15279,15 @@ function p1({
                 children: [r.jsxs("div", {
                     className: "flex items-center gap-2.5 flex-shrink-0",
                     children: [r.jsx("img", {
-                        src: "/assets/logo.png",
-                        alt: "CyberMonks",
+                        src: (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.logoUrl ? (function(u,t){if(/^data:/i.test(u))return u;var v=t?new Date(t).getTime():Date.now();return u+(u.indexOf("?")>=0?"&":"?")+"v="+v})(window.__CM_SETTINGS__.logoUrl,window.__CM_SETTINGS__.updatedAt) : "/assets/logo.png?v=" + Date.now()),
+                        alt: (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel",
                         className: "w-8 h-8 rounded-full object-cover",
                         style: {
                             boxShadow: "0 0 12px rgba(0,255,255,0.35)"
                         }
                     }), r.jsx("span", {
-                        className: "text-[#6acfff] font-bold tracking-wide",
-                        children: "CYBER"
-                    }), r.jsx("span", {
-                        className: "text-[#ff8c00] font-bold tracking-wide",
-                        children: "MONKS"
+                        className: "text-[#00ffff] font-bold tracking-wide",
+                        children: ((window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel").toUpperCase()
                     })]
                 }), r.jsxs("div", {
                     className: "relative flex-1 max-w-sm",
@@ -15323,8 +15314,8 @@ function p1({
                             children: "Connected"
                         })]
                     }), r.jsx("img", {
-                        src: "/assets/logo.png",
-                        alt: "CyberMonks",
+                        src: (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.logoUrl ? (function(u,t){if(/^data:/i.test(u))return u;var v=t?new Date(t).getTime():Date.now();return u+(u.indexOf("?")>=0?"&":"?")+"v="+v})(window.__CM_SETTINGS__.logoUrl,window.__CM_SETTINGS__.updatedAt) : "/assets/logo.png?v=" + Date.now()),
+                        alt: (window.__CM_SETTINGS__ && window.__CM_SETTINGS__.panelName) || "Panel",
                         className: "w-9 h-9 rounded-full object-cover",
                         style: {
                             boxShadow: "0 0 14px rgba(0,255,255,0.4), 0 0 22px rgba(255,140,0,0.2)"

@@ -23,7 +23,7 @@ function applyBranding(settings) {
   const name = (settings.panelName || 'CyberMonks').trim() || 'CyberMonks';
   const logo = logoWithCacheBust(settings.logoUrl || '/assets/logo.png', settings.updatedAt);
 
-  document.title = name + ' — ' + (document.title.includes('Admin')
+  document.title = name + ' - ' + (document.title.includes('Admin')
     ? 'Admin'
     : document.title.includes('Profile')
       ? 'Profile'
